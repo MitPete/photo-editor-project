@@ -1,4 +1,14 @@
-# photo-editor-project
+## Getting Started
+
+### Prerequisites
+- Python 3.x installed on your system
+- Git installed
+
+### Setup Instructions
+1. Clone the repository:
+   ```bash
+   git clone <repo-url>
+
 
 ## Workflow Summary
 
