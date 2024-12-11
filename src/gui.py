@@ -78,7 +78,11 @@ def create_gui():
             img_label.config(image=photo, text="")
             img_label.image = photo
 
-    # Function to apply hover effect
+    # Placeholder commands for new toolbar buttons
+    def placeholder_function():
+        print("This functionality will be implemented by a teammate.")
+
+    # Hover effect for sidebar buttons
     def on_hover(event):
         event.widget.config(bg="#444")  # Hover background color
 
@@ -89,16 +93,20 @@ def create_gui():
     buttons = [
         ("Upload", upload_image),
         ("Save", save_image),
-        ("Filters", None),  # Placeholder for Filters functionality
-        ("Resize", None),   # Placeholder for Resize functionality
-        ("Crop", None),     # Placeholder for Crop functionality
+        ("Filters", placeholder_function),  # Placeholder for Filters functionality
+        ("Resize", placeholder_function),   # Placeholder for Resize functionality
+        ("Crop", placeholder_function),     # Placeholder for Crop functionality
+        ("Undo", placeholder_function),
+        ("Redo", placeholder_function),
+        ("Draw", placeholder_function),
+        ("Add Text", placeholder_function)
     ]
 
     for text, command in buttons:
         btn = tk.Button(sidebar, text=text, command=command, **sidebar_button_style)
         btn.pack(pady=5)
 
-        # Add hover effect to the button
+        # Bind hover effects to the button
         btn.bind("<Enter>", on_hover)  # Mouse enters the button
         btn.bind("<Leave>", on_leave)  # Mouse leaves the button
 
@@ -114,6 +122,7 @@ def create_gui():
     toolbar = tk.Frame(content, bg="#2e2e2e", height=50)
     toolbar.pack(side="bottom", fill="x")
 
+    # Existing toolbar buttons
     upload_btn_toolbar = tk.Button(toolbar, text="Upload", command=upload_image, **toolbar_button_style)
     upload_btn_toolbar.pack(side="left", padx=5, pady=5)
 
