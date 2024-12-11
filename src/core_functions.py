@@ -5,8 +5,9 @@ Task:
 1. Implement basic editing functions:
    - `resize_image(image, width, height)` to resize the image to given dimensions.
    - `crop_image(image, box)` to crop the image based on a bounding box.
-   - `save_image(image, path)` to save the edited image in a chosen format.
+   
 2. Ensure proper error handling for invalid input dimensions or paths.
+
 3. Test each function using sample images and write standalone test scripts.
 
 Steps:
