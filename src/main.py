@@ -16,3 +16,8 @@ Steps:
 - Test each feature independently and as part of the full application.
 - Debug any integration issues and refine the application for usability.
 """
+from gui import create_gui
+
+
+if __name__ == "__main__":
+    create_gui()
