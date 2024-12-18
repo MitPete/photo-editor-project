@@ -4,6 +4,7 @@ from tkinter import filedialog, Toplevel
 from PIL import Image, ImageTk
 from core_functions import resize_image, crop_image
 from tools import draw_shape, add_text, save_to_history, undo, redo
+from filters import apply_grayscale, apply_sepia, apply_blur, adjust_brightness, apply_invert, apply_sharpen, apply_edge_detection, apply_emboss
 
 def create_gui():
     # Create main window
@@ -49,13 +50,10 @@ def create_gui():
         logo_label.image = logo_photo
         logo_label.pack(pady=10)
     except FileNotFoundError:
-        print("Logo file not found at {logo_path}. Skipping logo display.")
+        print(f"Logo file not found at {logo_path}. Skipping logo display.")
 
     sidebar_label = tk.Label(sidebar, text="Tools", font=("Helvetica", 14, "bold"), bg="#000000", fg="white")
     sidebar_label.pack(pady=20)
-
-    def placeholder_function():
-        print("This functionality will be implemented by a teammate.")
 
     def update_preview(image):
         nonlocal current_image
@@ -96,6 +94,41 @@ def create_gui():
             current_image = redo(current_image)
             update_preview(current_image)
 
+    # Dialog for applying filters
+    def apply_filter_dialog():
+        if not current_image:
+            print("No image to apply filters!")
+            return
+
+        dialog = Toplevel(root)
+        dialog.title("Filters and Effects")
+
+        def apply_filter(filter_function, *args):
+            nonlocal current_image
+            save_to_history(current_image)
+            current_image = filter_function(current_image, *args)
+            update_preview(current_image)
+
+        tk.Button(dialog, text="Grayscale", command=lambda: apply_filter(apply_grayscale)).pack(pady=5)
+        tk.Button(dialog, text="Sepia", command=lambda: apply_filter(apply_sepia)).pack(pady=5)
+        tk.Button(dialog, text="Invert", command=lambda: apply_filter(apply_invert)).pack(pady=5)
+        tk.Button(dialog, text="Sharpen", command=lambda: apply_filter(apply_sharpen)).pack(pady=5)
+        tk.Button(dialog, text="Edge Detection", command=lambda: apply_filter(apply_edge_detection)).pack(pady=5)
+        tk.Button(dialog, text="Emboss", command=lambda: apply_filter(apply_emboss)).pack(pady=5)
+
+        # Blur with user input
+        tk.Label(dialog, text="Blur Radius:").pack()
+        blur_entry = tk.Entry(dialog)
+        blur_entry.pack()
+        tk.Button(dialog, text="Apply Blur", command=lambda: apply_filter(apply_blur, int(blur_entry.get()))).pack(pady=5)
+
+        # Brightness with user input
+        tk.Label(dialog, text="Brightness Factor (e.g., 1.5):").pack()
+        brightness_entry = tk.Entry(dialog)
+        brightness_entry.pack()
+        tk.Button(dialog, text="Adjust Brightness", command=lambda: apply_filter(adjust_brightness, float(brightness_entry.get()))).pack(pady=5)
+
+    # Dialog for resizing the image
     def resize_image_dialog():
         if not current_image:
             print("No image to resize!")
@@ -118,6 +151,7 @@ def create_gui():
                 width = int(width_entry.get())
                 height = int(height_entry.get())
                 save_to_history(current_image)
+                # Use resize_image from core_functions to ensure consistency
                 current_image = current_image.resize((width, height))
                 update_preview(current_image)
                 dialog.destroy()
@@ -126,6 +160,35 @@ def create_gui():
 
         tk.Button(dialog, text="Apply", command=apply_resize).pack()
 
+    # Dialog for cropping the image
+    def crop_image_dialog():
+        if not current_image:
+            print("No image to crop!")
+            return
+
+        dialog = Toplevel(root)
+        dialog.title("Crop Image")
+
+        tk.Label(dialog, text="Crop Coordinates (x1,y1,x2,y2):").pack()
+        coords_entry = tk.Entry(dialog)
+        coords_entry.pack()
+
+        def apply_crop():
+            nonlocal current_image
+            try:
+                coords = tuple(map(int, coords_entry.get().split(",")))
+                if len(coords) != 4:
+                    raise ValueError("Please enter four integers separated by commas.")
+                save_to_history(current_image)
+                current_image = crop_image(current_image, coords)
+                update_preview(current_image)
+                dialog.destroy()
+            except Exception as e:
+                print(f"Error cropping image: {e}")
+
+        tk.Button(dialog, text="Apply", command=apply_crop).pack()
+
+    # Dialog for drawing shapes on the image
     def draw_shape_dialog():
         if not current_image:
             print("No image to draw on!")
@@ -161,6 +224,7 @@ def create_gui():
 
         tk.Button(dialog, text="Apply", command=apply_draw).pack()
 
+    # Dialog for adding text to the image
     def add_text_dialog():
         if not current_image:
             print("No image to add text!")
@@ -199,9 +263,9 @@ def create_gui():
     buttons = [
         ("Upload", upload_image),
         ("Save", save_image),
-        ("Filters", placeholder_function),
+        ("Filters", apply_filter_dialog),
         ("Resize", resize_image_dialog),
-        ("Crop", placeholder_function),
+        ("Crop", crop_image_dialog),
         ("Undo", undo_action),
         ("Redo", redo_action),
         ("Draw", draw_shape_dialog),
@@ -211,17 +275,6 @@ def create_gui():
     for text, command in buttons:
         btn = tk.Button(sidebar, text=text, command=command, **sidebar_button_style)
         btn.pack(pady=5)
-
-    project_description = tk.Label(
-        sidebar, 
-        text="Just upload your Image... and do your thing!", 
-        wraplength=150,  # Wrap text to fit the sidebar width
-        justify="left",  # Center-align the text
-        bg="#000000",  # Match sidebar background color
-        fg="white",  # White text color
-        font=("Helvetica", 12)
-    )
-    project_description.pack(pady=(10, 10))  # 10 pixels padding on top, 0 on bottom
 
     content = tk.Frame(root, bg="#1e1e1e")
     content.pack(side="right", fill="both", expand=True)
