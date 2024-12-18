@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, Toplevel
 from PIL import Image, ImageTk
-from core_functions import resize_image, crop_image  # Import core functions
-
+from core_functions import resize_image, crop_image
+from tools import draw_shape, add_text, save_to_history, undo, redo
 
 def create_gui():
     # Create main window
@@ -11,10 +11,8 @@ def create_gui():
     root.geometry("1200x800")
     root.configure(bg="#1e1e1e")
 
-    # Global variable to store the current image
     current_image = None
 
-    # Styles for sidebar buttons
     sidebar_button_style = {
         "bg": "#2e2e2e",
         "fg": "white",
@@ -26,7 +24,6 @@ def create_gui():
         "height": 2
     }
 
-    # Styles for toolbar buttons
     toolbar_button_style = {
         "bg": "#3a3a3a",
         "fg": "white",
@@ -37,19 +34,15 @@ def create_gui():
     }
     label_style = {"font": ("Helvetica", 16, "bold"), "bg": "#1e1e1e", "fg": "white"}
 
-    # Sidebar Frame
     sidebar = tk.Frame(root, bg="#2e2e2e", width=200)
     sidebar.pack(side="left", fill="y")
 
-    # Sidebar label
     sidebar_label = tk.Label(sidebar, text="Tools", font=("Helvetica", 14, "bold"), bg="#2e2e2e", fg="white")
     sidebar_label.pack(pady=20)
 
-    # Placeholder function for unfinished features
     def placeholder_function():
         print("This functionality will be implemented by a teammate.")
 
-    # Function to update the image preview
     def update_preview(image):
         nonlocal current_image
         current_image = image
@@ -59,7 +52,6 @@ def create_gui():
         img_label.config(image=photo)
         img_label.image = photo
 
-    # Upload Image
     def upload_image():
         nonlocal current_image
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
@@ -68,7 +60,6 @@ def create_gui():
             update_preview(current_image)
             root.title(f"Photo Editor - {file_path}")
 
-    # Save Image
     def save_image():
         if current_image:
             file_path = filedialog.asksaveasfilename(defaultextension=".png",
@@ -79,47 +70,18 @@ def create_gui():
                 current_image.save(file_path)
                 print(f"Image saved at {file_path}")
 
-    # Crop Image
-    def crop_image_dialog():
-        if not current_image:
-            print("No image to crop!")
-            return
+    def undo_action():
+        nonlocal current_image
+        if current_image:
+            current_image = undo(current_image)
+            update_preview(current_image)
 
-        dialog = Toplevel(root)
-        dialog.title("Crop Image")
+    def redo_action():
+        nonlocal current_image
+        if current_image:
+            current_image = redo(current_image)
+            update_preview(current_image)
 
-        tk.Label(dialog, text="Left:").pack()
-        left_entry = tk.Entry(dialog)
-        left_entry.pack()
-
-        tk.Label(dialog, text="Top:").pack()
-        top_entry = tk.Entry(dialog)
-        top_entry.pack()
-
-        tk.Label(dialog, text="Right:").pack()
-        right_entry = tk.Entry(dialog)
-        right_entry.pack()
-
-        tk.Label(dialog, text="Bottom:").pack()
-        bottom_entry = tk.Entry(dialog)
-        bottom_entry.pack()
-
-        def apply_crop():
-            nonlocal current_image
-            try:
-                crop_box = (
-                    int(left_entry.get()), int(top_entry.get()),
-                    int(right_entry.get()), int(bottom_entry.get())
-                )
-                current_image = current_image.crop(crop_box)  # Use crop directly
-                update_preview(current_image)
-                dialog.destroy()
-            except Exception as e:
-                print(f"Error cropping image: {e}")
-
-        tk.Button(dialog, text="Apply", command=apply_crop).pack()
-
-    # Resize Image
     def resize_image_dialog():
         if not current_image:
             print("No image to resize!")
@@ -141,7 +103,8 @@ def create_gui():
             try:
                 width = int(width_entry.get())
                 height = int(height_entry.get())
-                current_image = current_image.resize((width, height))  # Use resize directly
+                save_to_history(current_image)
+                current_image = current_image.resize((width, height))
                 update_preview(current_image)
                 dialog.destroy()
             except Exception as e:
@@ -149,41 +112,98 @@ def create_gui():
 
         tk.Button(dialog, text="Apply", command=apply_resize).pack()
 
-    # Hover effect for sidebar buttons
-    def on_hover(event):
-        event.widget.config(bg="#444")
+    def draw_shape_dialog():
+        if not current_image:
+            print("No image to draw on!")
+            return
 
-    def on_leave(event):
-        event.widget.config(bg=sidebar_button_style["bg"])
+        dialog = Toplevel(root)
+        dialog.title("Draw Shape")
 
-    # Sidebar buttons
+        tk.Label(dialog, text="Shape: (rectangle, ellipse, line)").pack()
+        shape_entry = tk.Entry(dialog)
+        shape_entry.pack()
+
+        tk.Label(dialog, text="Coordinates (x1,y1,x2,y2):").pack()
+        coords_entry = tk.Entry(dialog)
+        coords_entry.pack()
+
+        tk.Label(dialog, text="Color (R,G,B):").pack()
+        color_entry = tk.Entry(dialog)
+        color_entry.pack()
+
+        def apply_draw():
+            nonlocal current_image
+            try:
+                shape = shape_entry.get()
+                coords = tuple(map(int, coords_entry.get().split(",")))
+                color = tuple(map(int, color_entry.get().split(",")))
+                save_to_history(current_image)
+                current_image = draw_shape(current_image, shape, coords, color)
+                update_preview(current_image)
+                dialog.destroy()
+            except Exception as e:
+                print(f"Error drawing shape: {e}")
+
+        tk.Button(dialog, text="Apply", command=apply_draw).pack()
+
+    def add_text_dialog():
+        if not current_image:
+            print("No image to add text!")
+            return
+
+        dialog = Toplevel(root)
+        dialog.title("Add Text")
+
+        tk.Label(dialog, text="Text:").pack()
+        text_entry = tk.Entry(dialog)
+        text_entry.pack()
+
+        tk.Label(dialog, text="Position (x,y):").pack()
+        position_entry = tk.Entry(dialog)
+        position_entry.pack()
+
+        tk.Label(dialog, text="Color (R,G,B):").pack()
+        color_entry = tk.Entry(dialog)
+        color_entry.pack()
+
+        def apply_text():
+            nonlocal current_image
+            try:
+                text = text_entry.get()
+                position = tuple(map(int, position_entry.get().split(",")))
+                color = tuple(map(int, color_entry.get().split(",")))
+                save_to_history(current_image)
+                current_image = add_text(current_image, text, position, color)
+                update_preview(current_image)
+                dialog.destroy()
+            except Exception as e:
+                print(f"Error adding text: {e}")
+
+        tk.Button(dialog, text="Apply", command=apply_text).pack()
+
     buttons = [
         ("Upload", upload_image),
         ("Save", save_image),
         ("Filters", placeholder_function),
         ("Resize", resize_image_dialog),
-        ("Crop", crop_image_dialog),
-        ("Undo", placeholder_function),
-        ("Redo", placeholder_function),
-        ("Draw", placeholder_function),
-        ("Add Text", placeholder_function)
+        ("Crop", placeholder_function),
+        ("Undo", undo_action),
+        ("Redo", redo_action),
+        ("Draw", draw_shape_dialog),
+        ("Add Text", add_text_dialog)
     ]
 
     for text, command in buttons:
         btn = tk.Button(sidebar, text=text, command=command, **sidebar_button_style)
         btn.pack(pady=5)
-        btn.bind("<Enter>", on_hover)
-        btn.bind("<Leave>", on_leave)
 
-    # Main Content Frame
     content = tk.Frame(root, bg="#1e1e1e")
     content.pack(side="right", fill="both", expand=True)
 
-    # Image Preview Area
     img_label = tk.Label(content, text="Image Preview Area", **label_style)
     img_label.pack(pady=20, expand=True)
 
-    # Toolbar
     toolbar = tk.Frame(content, bg="#2e2e2e", height=50)
     toolbar.pack(side="bottom", fill="x")
 
@@ -193,12 +213,10 @@ def create_gui():
     save_btn_toolbar = tk.Button(toolbar, text="Save", command=save_image, **toolbar_button_style)
     save_btn_toolbar.pack(side="left", padx=5, pady=5)
 
-    # Footer
     footer = tk.Label(root, text="Photo Editor App © 2024", font=("Helvetica", 10), bg="#1e1e1e", fg="#888")
     footer.pack(side="bottom", pady=10)
 
     root.mainloop()
-
 
 if __name__ == "__main__":
     create_gui()
