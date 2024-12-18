@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog, Toplevel
 from PIL import Image, ImageTk
@@ -7,7 +8,7 @@ from tools import draw_shape, add_text, save_to_history, undo, redo
 def create_gui():
     # Create main window
     root = tk.Tk()
-    root.title("Photo Editor")
+    root.title("The Editor.")
     root.geometry("1200x800")
     root.configure(bg="#1e1e1e")
 
@@ -20,24 +21,37 @@ def create_gui():
         "relief": "flat",
         "activebackground": "#5a5a5a",
         "activeforeground": "white",
-        "width": 20,
-        "height": 2
+        "width": 15,
+        "height": 1
     }
 
     toolbar_button_style = {
-        "bg": "#3a3a3a",
+        "bg": "#000000",
         "fg": "white",
         "font": ("Helvetica", 12),
         "relief": "flat",
-        "activebackground": "#5a5a5a",
+        "activebackground": "#444444",
         "activeforeground": "white"
     }
     label_style = {"font": ("Helvetica", 16, "bold"), "bg": "#1e1e1e", "fg": "white"}
 
-    sidebar = tk.Frame(root, bg="#2e2e2e", width=200)
+    base_dir = os.path.dirname(__file__)
+    logo_path = os.path.join(base_dir, "../static/img/logo.png")
+
+    sidebar = tk.Frame(root, bg="#000000", width=300)
     sidebar.pack(side="left", fill="y")
 
-    sidebar_label = tk.Label(sidebar, text="Tools", font=("Helvetica", 14, "bold"), bg="#2e2e2e", fg="white")
+    try:
+        logo_image = Image.open(logo_path)
+        logo_image.thumbnail((150, 150))
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(sidebar, image=logo_photo, bg="#000000")
+        logo_label.image = logo_photo
+        logo_label.pack(pady=10)
+    except FileNotFoundError:
+        print("Logo file not found at {logo_path}. Skipping logo display.")
+
+    sidebar_label = tk.Label(sidebar, text="Tools", font=("Helvetica", 14, "bold"), bg="#000000", fg="white")
     sidebar_label.pack(pady=20)
 
     def placeholder_function():
@@ -198,6 +212,17 @@ def create_gui():
         btn = tk.Button(sidebar, text=text, command=command, **sidebar_button_style)
         btn.pack(pady=5)
 
+    project_description = tk.Label(
+        sidebar, 
+        text="Just upload your Image... and do your thing!", 
+        wraplength=150,  # Wrap text to fit the sidebar width
+        justify="left",  # Center-align the text
+        bg="#000000",  # Match sidebar background color
+        fg="white",  # White text color
+        font=("Helvetica", 12)
+    )
+    project_description.pack(pady=(10, 10))  # 10 pixels padding on top, 0 on bottom
+
     content = tk.Frame(root, bg="#1e1e1e")
     content.pack(side="right", fill="both", expand=True)
 
@@ -213,7 +238,7 @@ def create_gui():
     save_btn_toolbar = tk.Button(toolbar, text="Save", command=save_image, **toolbar_button_style)
     save_btn_toolbar.pack(side="left", padx=5, pady=5)
 
-    footer = tk.Label(root, text="Photo Editor App © 2024", font=("Helvetica", 10), bg="#1e1e1e", fg="#888")
+    footer = tk.Label(root, text="The Editor. © 2024", font=("Helvetica", 10), bg="#1e1e1e", fg="#888")
     footer.pack(side="bottom", pady=10)
 
     root.mainloop()
