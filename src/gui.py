@@ -66,7 +66,8 @@ def create_gui():
 
     def upload_image():
         nonlocal current_image
-        file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+        file_path = filedialog.askopenfilename(filetypes=[("Image Files", ("*.png", "*.jpg", "*.jpeg"))]
+)
         if file_path:
             current_image = Image.open(file_path)
             update_preview(current_image)
